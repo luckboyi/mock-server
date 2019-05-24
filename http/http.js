@@ -1,93 +1,3 @@
-// import {
-//   apiPre
-// } from '@/assets/config/env'
-/*
-      eSnStudio Standard Ajax Module
-      2015-05-12
-  */
-// Ajax命令对象返回格式定义
-function AjaxCmdResult() {
-  this.Tag = ''; // 引导标识
-  this.Status = ''; // HTML状态标识
-  this.Action = ''; // 执行动作名
-  this.ActObj = ''; // 执行对象、计数、说明 …………
-  this.Args = ''; // 执行参数
-}
-
-// Ajax命令式函数
-// Ajax('请求地址','请求方式','参数JSON')
-// Ajax('index.jsp','POST',{arg1:'',arg2:''},true,func());
-// 强制为同步模式，返回AjaxCmdResult对象，可能的命令结果：
-// 1.ERROR,环境错误或非服务器错误，参看Status
-// 2.UNKNOW,引导标识不可识或返回不能解析的JSON，参看ActObj
-// 3.返回空值
-// 4.返回NO,无动作
-// 5.返回ER,服务器返回馈错误
-// 6.返回OK,成功，另实现执行体
-// function AjaxCmd(url, method, args) {
-//   const rCmd = new AjaxCmdResult()
-//   const obj = null
-//   const ajax = new AjaxObject()
-//   ajax.URL = url
-//   ajax.Method = method
-//   ajax.Async = false
-//   ajax.Args = args
-//   ajax.onSuccess = function(xhr) {
-//     let text = xhr.responseText
-//     if (text.charCodeAt() === 65279) text = text.substring(1) // 处理utf8引导字节
-//     rCmd.Status = xhr.status
-//     if (text.trim() === '') {
-//       rCmd.Tag = 'NULL'
-//     } else {
-//       try {
-//         eval('obj=' + text)
-//         rCmd.Tag = obj.Tag
-//         rCmd.Action = obj.Action
-//         rCmd.ActObj = obj.ActObj
-//         rCmd.Args = obj.Args
-//       } catch (e) {
-//         rCmd.Tag = 'UNKNOW'
-//         rCmd.ActObj = text
-//       }
-//     }
-//   }
-//   ajax.onFailure = function(xhr) {
-//     eval("obj={Tag:'ERROR',Status:'" + xhr.status + "'}")
-//     rCmd.Tag = obj.Tag
-//     rCmd.Status = xhr.status
-//   }
-//   ajax.Connect()
-//   return rCmd
-// }
-
-// function getActiveURL(url) {
-//   const r = Math.random()
-//   if (url.indexOf('?') === -1) {
-//     return url + '?activetime=' + r
-//   } else {
-//     return url + '&activetime=' + r
-//   }
-// }
-
-// function AjaxJsonSmp(url, method, args) {
-//   const obj = null
-//   const ajax = new AjaxObject()
-//   ajax.URL = getActiveURL(url)
-//   ajax.Method = method
-//   ajax.Async = false
-//   ajax.Args = args
-//   ajax.onSuccess = function(xhr) {
-//     let text = xhr.responseText
-//     if (text.charCodeAt() === 65279) text = text.substring(1) // 处理utf8引导字节
-//     eval('obj=' + text)
-//   }
-//   ajax.onFailure = function(xhr) {
-//     eval("obj={Tag:'ERROR',Status:'" + xhr.status + "'}")
-//   }
-//   ajax.Connect()
-//   return obj
-// }
-
 // Ajax-JSON函数
 // 强制为同步模式
 function AjaxJson(url, method, args, fn, dataType) {
@@ -103,51 +13,24 @@ function AjaxJson(url, method, args, fn, dataType) {
   ajax.Method = method;
   ajax.Async = true;
   ajax.Args = args;
+
+  //计算表达式的值
+  function evil(fn) {
+    var Fn = Function; //一个变量指向Function，防止有些前端编译工具报错
+    return new Fn('return ' + fn)();
+  }
   ajax.onSuccess = function(xhr) {
     let text = xhr.responseText;
     if (text.charCodeAt() === 65279) text = text.substring(1); // 处理utf8引导字节
-    eval('obj=' + text);
+    evil('obj=' + text);
     fn(obj);
   };
   ajax.onFailure = function(xhr) {
-    eval("obj={Tag:'ERROR',Status:'" + xhr.status + "'}");
+    evil("obj={Tag:'ERROR',Status:'" + xhr.status + "'}");
     fn(obj);
   };
   ajax.Connect();
   return obj;
-}
-
-// Ajax简单化函数
-// Ajax('请求地址','请求方式','参数JSON',true异步|false同步,成功时函数)
-// Ajax('index.jsp','POST',{arg1:'',arg2:''},true,func());
-function AjaxSmp(url, method, args, async, callback) {
-  Ajax(
-    url,
-    method,
-    args,
-    async,
-    callback,
-    function(xhr) {
-      alert('Ajax Error(' + xhr.status + '):\n' + xhr.responseText);
-    },
-    function() {},
-    function() {},
-  );
-}
-
-// Ajax标准函数
-// Ajax('请求地址','请求方式','参数JSON',true异步|false同步,成功时函数,失败时函数,请求前函数,返回后函数)
-// Ajax('index.jsp','POST',{arg1:'',arg2:''},true,func(),func(),func(),func());
-function Ajax(url, method, args, async, success, failure) {
-  const ajax = new AjaxObject();
-  ajax.URL = url;
-  ajax.Method = method;
-  ajax.Async = async;
-  ajax.Args = args;
-  ajax.onSuccess = success;
-  ajax.onFailure = failure;
-  ajax.Connect();
-  return ajax.Request;
 }
 
 // Ajax标准类模块
@@ -294,7 +177,7 @@ class http {
   usualGet(obj) {
     return new Promise((resolve, reject) => {
       this.originGet(obj, res => {
-        if (res.code == 200) {
+        if (res.code === 200) {
           resolve(res.data);
         }
       });
